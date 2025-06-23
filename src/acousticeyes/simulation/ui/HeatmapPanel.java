@@ -22,7 +22,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
     private MainPanel mainPanel;
     private JPanel paramsPanel;
 
-    private Parameter fovTheta, fovPhi;
+    private Parameter fovTheta, fovPhi, colorScale;
     // possible others: color scaling; resolution; thresholds for source detection, etc.
 
     private Thread simulationThread;
@@ -30,7 +30,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
     // paramsPanel dimensions
     private static final int PP_WD = 500;
-    private static final int PP_HT = 100;
+    private static final int PP_HT = 150;
 
     private static final int PARAM_HT = 40;
 
@@ -46,13 +46,16 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
         fovTheta = new Parameter("FOV theta", 90, 20, 180, false, true, PP_WD, PARAM_HT, (x) -> scheduleRun());
         fovPhi = new Parameter("FOV phi", 90, 20, 180, false, true, PP_WD, PARAM_HT, (x) -> scheduleRun());
+        colorScale = new Parameter("Color scale", 4, 0, 10, false, false, PP_WD, PARAM_HT, (x) -> scheduleRun());
 
         paramsPanel = new JPanel();
         paramsPanel.setLayout(null);
         paramsPanel.add(fovTheta);
         paramsPanel.add(fovPhi);
+        paramsPanel.add(colorScale);
         fovTheta.setBounds(0,0, PP_WD, PARAM_HT);
         fovPhi.setBounds(0,PARAM_HT, PP_WD, PARAM_HT);
+        colorScale.setBounds(0, PARAM_HT*2, PP_WD, PARAM_HT);
         paramsPanel.setBounds(0, height - PP_HT, PP_WD, PP_HT);
 
         add(paramsPanel);
@@ -94,21 +97,22 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
     private static class SimRequest {
         Simulator simulator;
         PhasedArray phasedArray;
-        double fovTheta, fovPhi;
+        double fovTheta, fovPhi, colorScale;
         int xs, ys;
 
-        SimRequest(Simulator sim, PhasedArray arr, int xs, int ys, double ft, double fp) {
+        SimRequest(Simulator sim, PhasedArray arr, int xs, int ys, double ft, double fp, double cs) {
             simulator = sim;
             phasedArray = arr;
             fovTheta = ft;
             fovPhi = fp;
+            colorScale = cs;
             this.xs = xs;
             this.ys = ys;
         }
     }
 
     public void scheduleRun() {
-        SimRequest req = new SimRequest(simulator, phasedArray, xs, ys, fovTheta.get(), fovPhi.get());
+        SimRequest req = new SimRequest(simulator, phasedArray, xs, ys, fovTheta.get(), fovPhi.get(), colorScale.get());
         queue.add(req);
     }
 
@@ -118,7 +122,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
         double fovt = Utils.radians(req.fovTheta);
         double fovp = Utils.radians(req.fovPhi);
         double[][] hm = req.simulator.scan2d(req.phasedArray, req.xs, req.ys, -fovt/2, fovt/2, -fovp/2, fovp/2);
-        BufferedImage img = req.simulator.render(hm);
+        BufferedImage img = req.simulator.render(hm, req.colorScale);
         // todo: render actual / proposed source locations on top of this image
         // all Swing UI rendering must happen on the event dispatch thread
         SwingUtilities.invokeLater(() -> {

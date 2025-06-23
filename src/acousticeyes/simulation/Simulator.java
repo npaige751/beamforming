@@ -72,13 +72,13 @@ public class Simulator {
     }
 
     // render a heatmap
-    public BufferedImage render(double[][] heatmap) {
+    public BufferedImage render(double[][] heatmap, double colorScale) {
         int xs = heatmap.length;
         int ys = heatmap[0].length;
         BufferedImage img = new BufferedImage(xs, ys, BufferedImage.TYPE_INT_RGB);
         for (int x = 0; x < xs; x++) {
             for (int y = 0; y < ys; y++) {
-                img.setRGB(x, ys - y - 1, tonemap(heatmap[x][y], 0.5, 0));
+                img.setRGB(x, ys - y - 1, tonemap(heatmap[x][y], colorScale, 0));
             }
         }
         return img;
