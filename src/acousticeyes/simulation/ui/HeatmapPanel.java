@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/* Displays rendered beamforming heatmaps */
 public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListener {
 
     private Simulator simulator;
@@ -27,6 +28,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
     private Thread simulationThread;
     private LinkedBlockingQueue<SimRequest> queue = new LinkedBlockingQueue<>();
 
+    // paramsPanel dimensions
     private static final int PP_WD = 500;
     private static final int PP_HT = 100;
 
@@ -56,6 +58,11 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
         add(paramsPanel);
         add(mainPanel);
 
+        /* Simulation runs could potentially be lengthy, so it's best not to do this computation on
+           the UI thread. With a basic queue, dozens of unnecessary simulation runs could be scheduled
+           from a single slider adjustment, which could take many seconds to complete. Instead, only
+           actually service the last request in the queue.
+         */
         simulationThread = new Thread(() -> {
             while (true) {
                 try {
@@ -83,6 +90,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
         scheduleRun();
     }
 
+    // encapsulates all state needed to run a simulation
     private static class SimRequest {
         Simulator simulator;
         PhasedArray phasedArray;
@@ -104,13 +112,15 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
         queue.add(req);
     }
 
-    // don't call on EDT
+    // potentially slow - don't call on the Swing event dispatch thread (this would freeze the UI while
+    // the simulation is running)
     private void runSimulation(SimRequest req) {
         double fovt = Utils.radians(req.fovTheta);
         double fovp = Utils.radians(req.fovPhi);
         double[][] hm = req.simulator.scan2d(req.phasedArray, req.xs, req.ys, -fovt/2, fovt/2, -fovp/2, fovp/2);
         BufferedImage img = req.simulator.render(hm);
         // todo: render actual / proposed source locations on top of this image
+        // all Swing UI rendering must happen on the event dispatch thread
         SwingUtilities.invokeLater(() -> {
             renderedImage = img;
             repaint();
@@ -121,8 +131,6 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
         @Override
         public void paintComponent(Graphics g) {
-            g.setColor(Color.RED);
-            g.fillRect(10,10,100,100);
             if (renderedImage != null) {
                 g.drawImage(renderedImage, 0, 0, getWidth(), getHeight(), null);
             }

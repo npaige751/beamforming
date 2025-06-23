@@ -1,5 +1,6 @@
 package acousticeyes.simulation;
 
+/* SoundSource that generates sine waves */
 public class SinusoidSource implements SoundSource {
 
     private double f, a, phi;

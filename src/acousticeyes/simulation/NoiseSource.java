@@ -2,6 +2,7 @@ package acousticeyes.simulation;
 
 import acousticeyes.util.Utils;
 
+/* SoundSource providing white noise */
 public class NoiseSource implements SoundSource{
 
     private double[] samples;

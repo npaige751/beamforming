@@ -2,11 +2,13 @@ package acousticeyes.util;
 
 public class Utils {
 
+    // linearly map from [sx1, sx2] -> [dx1, dx2]
     public static double lerp(double sx1, double sx2, double dx1, double dx2, double x) {
         double t = (x - sx1) / (sx2 - sx1);
         return dx1 + (dx2 - dx1) * t;
     }
 
+    // linearly interpolate adjacent samples in xs to approximate value at non-integer sample index t
     public static double lerpSample(double[] xs, double t) {
         if (t < 0) return 0;
         if (t+1 >= xs.length) return 0;
@@ -15,6 +17,7 @@ public class Utils {
         return xs[s] * (1-d) + xs[s+1] * d;
     }
 
+    // calculate root mean square amplitude of x
     public static double rms(double[] x) {
         double s = 0;
         for (int i=0; i < x.length; i++) {
@@ -44,6 +47,8 @@ public class Utils {
         return m;
     }
 
+    // compute discrete Fourier transform of x
+    // returns an array of twice the length of x, where adjacent entries are the real and imaginary components of the DFT
     public static double[] dft(double[] x) {
         int n = x.length;
         double[] res = new double[n];
@@ -56,11 +61,6 @@ public class Utils {
             }
             res[k*2] = csum / n; // sqrt(n) for symmetric variant
             res[k*2 + 1] = ssum / n;
-            /*
-            res[k*2] = Math.sqrt(csum*csum + ssum*ssum);
-            res[k*2 + 1] = Math.atan2(ssum, csum);
-
-             */
         }
         return res;
     }

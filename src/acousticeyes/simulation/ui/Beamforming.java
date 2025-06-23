@@ -2,6 +2,7 @@ package acousticeyes.simulation.ui;
 
 import javax.swing.*;
 
+/* Top-level UI container for beamforming simulation */
 public class Beamforming extends JFrame {
 
     public ArrayPanel arrayPanel;

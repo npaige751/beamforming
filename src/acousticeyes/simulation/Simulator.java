@@ -5,9 +5,13 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+/* Represents a collection of speakers and their associated sound sources.
+ * Handles simulation of sound propagation from speakers to microphones.
+ * Provides rendering of beamforming heatmap results.
+ */
 public class Simulator {
     public List<Speaker> speakers;
-    public static final double SPS = 48000;
+    public static final double SPS = 48000; // sampling rate, Hz
     public static final double SPEED_OF_SOUND = 340.0; // m/s
 
     public Simulator(Speaker... speakers) {
@@ -18,6 +22,12 @@ public class Simulator {
         this.speakers = speakers;
     }
 
+    // Populates 'recording' field in m with pressure samples simulated based on
+    // the speakers and their sound sources. Delays and attenuation due to distance
+    // are accounted for. The medium is assumed to be lossless, stationary and uniform,
+    // and the environment empty (i.e, no reflections).
+    // "noisy" actual positions of microphones are used to calculate delays, while the
+    // beamforming will use the theoretical positions.
     public void simulate(Microphone m, int ns) {
         double[] samples = new double[ns];
         for (Speaker sp : speakers) {
@@ -43,6 +53,7 @@ public class Simulator {
             new Color(240, 20, 0)
     };
 
+    // use a logarithmic mapping for heatmap values to accommodate a higher dynamic range
     private static int tonemap(double x, double scale, double offset) {
         double lx = Math.log1p(x) * scale + offset;
         if (lx >= colorMap.length-1) return colorMap[colorMap.length-1].getRGB();
@@ -54,11 +65,13 @@ public class Simulator {
         return new Color(r,g,b).getRGB();
     }
 
+    // simulate, then do beamforming
     public double[][] scan2d(PhasedArray arr, int xs, int ys, double thetaStart, double thetaEnd, double phiStart, double phiEnd) {
         arr.simulate(this, 5000);
         return arr.sweepBeam(thetaStart, thetaEnd, xs, phiStart, phiEnd, ys, 2000 / SPS, 100);
     }
 
+    // render a heatmap
     public BufferedImage render(double[][] heatmap) {
         int xs = heatmap.length;
         int ys = heatmap[0].length;

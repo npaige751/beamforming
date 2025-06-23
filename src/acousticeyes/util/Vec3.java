@@ -1,5 +1,6 @@
 package acousticeyes.util;
 
+// a 3-dimensional vector
 public class Vec3 {
     public double x,y,z;
 
@@ -25,6 +26,7 @@ public class Vec3 {
         return x*other.x + y*other.y + z*other.z;
     }
 
+    // projection of this onto other
     public Vec3 projOnto(Vec3 other) {
         return other.mul(this.dot(other) / other.dot(other));
     }

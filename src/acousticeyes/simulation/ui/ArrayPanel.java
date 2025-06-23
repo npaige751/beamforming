@@ -11,6 +11,9 @@ import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.List;
 
+/* UI for adjusting parameters of the phased array and displaying a graphical representation
+ * of the arrangement of microphones.
+ */
 public class ArrayPanel extends JPanel implements ItemListener {
     private static final int PARAM_HT = 40;
     private static final int PAD = 5;
@@ -58,6 +61,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
         add(posNoise);
         add(micNoise);
         add(layout);
+        // some of these have the same coordinates. not all are visible simultaneously, depending on the grid/radial mode
         rows.setBounds(PAD, PARAM_HT, width, PARAM_HT);
         cols.setBounds(PAD, PARAM_HT * 2, width, PARAM_HT);
         xsize.setBounds(PAD, PARAM_HT * 3, width, PARAM_HT);
@@ -81,6 +85,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
         setMode((Mode) modeSelector.getSelectedItem());
     }
 
+    // some parameters only apply in grid or radial mode. switch which ones are visible as appropriate
     private void setMode(Mode mode) {
         if (mode == this.mode) return;
         this.mode = mode;
@@ -110,6 +115,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
         updateGrid();
     }
 
+    // build a PhasedArray based on the current values of the parameters
     private PhasedArray constructArray() {
         switch(mode) {
             case GRID:
@@ -150,6 +156,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
         repaint();
     }
 
+    // visual representation of the array layout
     private static class ArrayLayoutLabel extends JLabel implements ArrayListener {
         private double xs, ys;
         private PhasedArray arr;

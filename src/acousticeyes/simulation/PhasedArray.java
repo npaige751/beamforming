@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/* Represents an array of microphones and implements delay-and-sum beamforming */
 public class PhasedArray {
     public List<Microphone> mics = new ArrayList<>();
     private Vec3 center;
@@ -32,6 +33,13 @@ public class PhasedArray {
         return new PhasedArray(pos, posNoise);
     }
 
+    /* Creates a radial/spiral array.
+     *   useExp - if true, use exponential spacing (based on 'exp') in radius; otherwise, linear spacing, 'exp' has no effect
+     *   exp - The radius function is a shifted version of e^(x * exp) where x ranges from 0 to 1 across the range of radii.
+     *         Higher values give more extreme skew towards smaller rings.
+     *   spiral - ranges from 0 (straight spokes) to 1 (maximum spiralization). Larger values would create mirror versions of less spiraly arrangements.
+     *   posNoise - standard deviation for gaussian noise modeling error in actual vs. theoretical microphone positions (same stddev on all axes, for simplicity)
+     */
     public static PhasedArray radial(int rings, int spokes, double minR, double maxR, double exp, boolean useExp, double spiral, double posNoise) {
         List<Vec3> pos = new ArrayList<>();
         double maxexp = Math.exp(exp) - 1;
@@ -53,23 +61,24 @@ public class PhasedArray {
         return new PhasedArray(pos, posNoise);
     }
 
+    // apply simulation to all microphones in the array. this populates their recordings.
     public void simulate(Simulator sim, int ns) {
         for (Microphone m : mics) {
             sim.simulate(m, ns);
         }
     }
 
+    // calculates the relative delays between microphones for sound arriving from (theta, phi)
     // assumes array is looking down Z axis; theta is azimuth, phi is altitude angle, centered on 0
     public double[] farFieldBeamformingDelays(double theta, double phi) {
         double[] delays = new double[n];
         Vec3 aim = new Vec3(0,0,1).rotX(phi).rotY(theta);
         for (int i=0; i < delays.length; i++) {
+            // center is an arbitrary reference point set to 0 relative delay; any point in the array plane could be used.
+            // the delay time is the length of the projection of the vector from the center to the microphone onto the
+            // incoming sound direction (beam aim vector) times the speed of sound.
             Vec3 dv = mics.get(i).pos.sub(center);
-            if (dv.mag() < 1e-6) {
-                delays[i] = 0;
-            } else {
-                delays[i] = dv.dot(aim) / Simulator.SPEED_OF_SOUND;
-            }
+            delays[i] = dv.dot(aim) / Simulator.SPEED_OF_SOUND;
         }
         return normalizeDelays(delays);
     }
@@ -84,6 +93,9 @@ public class PhasedArray {
         return res;
     }
 
+    // shifts the microphone recordings according to the specified delay times and sums them.
+    // startTime - can be used to skip to a point where all of the microphones have started receiving sound
+    // samples - the number of samples over which to perform the summation
     public double[] delayAndSum(double[] delays, double startTime, int samples) {
         double[] sum = new double[samples];
         for (int i=0; i < samples; i++) {
@@ -103,6 +115,7 @@ public class PhasedArray {
         return spectra;
     }
 
+    /*
     public double[] delayAndSumFreqDomain(double[][] spectra, double[] delays, double startTime, int samples) {
         double[] sum = new double[samples];
         for (int i=0; i < samples; i+=2) {
@@ -113,7 +126,10 @@ public class PhasedArray {
         return sum;
 
     }
+     */
 
+    // Run DAS beamforming on a grid of points. Returns a 2D array with the RMS amplitude of the
+    // delayed-and-summed waveforms at each beam direction.
     public double[][] sweepBeam(double thetaStart, double thetaEnd, int thetaSteps, double phiStart, double phiEnd, int phiSteps, double startTime, int samples) {
         double[][] res = new double[thetaSteps][phiSteps];
         for (int i=0; i < thetaSteps; i++) {
@@ -125,6 +141,8 @@ public class PhasedArray {
         }
         return res;
     }
+
+    /*
     public double[][] sweepBeamFreqDomain(double thetaStart, double thetaEnd, int thetaSteps, double phiStart, double phiEnd, int phiSteps, double startTime, int samples) {
         double[][] spectra = computeSpectra(startTime, samples);
         double[][] res = new double[thetaSteps][phiSteps];
@@ -137,5 +155,6 @@ public class PhasedArray {
         }
         return res;
     }
+     */
 
 }

@@ -8,16 +8,20 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/* Wrapper for UI components and logic pertaining to adjusting the value of some parameter.
+ *
+
+ */
 public class Parameter extends JPanel implements ChangeListener {
     private double value;
     private double min, max;
-    private boolean logarithmic;
-    private boolean integer;
+    private boolean logarithmic; // whether to use logarithmic or linear interpolation between min and max values
+    private boolean integer; // whether to round values to integers
     public String name;
 
-    private JLabel label;
-    private JSlider slider;
-    private Consumer<Double> changeCallback;
+    private JLabel label; // displays parameter name and current value
+    private JSlider slider; // slider for adjusting parameter value
+    private Consumer<Double> changeCallback; // called whenever the slider is moved
 
     public static final int SLIDER_WD = 250;
     public static final Font FONT = new Font("Ubuntu Mono", Font.PLAIN, 16);
@@ -53,6 +57,7 @@ public class Parameter extends JPanel implements ChangeListener {
         slider.addChangeListener(this);
     }
 
+    // convert a parameter value to a slider position
     private int valueToPos(double value) {
         if (logarithmic) {
             return (int) Utils.lerp(Math.log(min), Math.log(max), 0, SLIDER_WD, Math.log(value));
@@ -61,6 +66,7 @@ public class Parameter extends JPanel implements ChangeListener {
         }
     }
 
+    // convert slider position to a parameter value
     private double posToValue(int pos) {
         double v = 0;
         if (logarithmic) {

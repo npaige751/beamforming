@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+/* UI for managing a list of speaker positions and sound sources */
 public class SourcesPanel extends JPanel implements ListSelectionListener {
 
     private Parameter theta, phi, freq, ampl, dist;
