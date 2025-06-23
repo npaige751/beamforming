@@ -35,6 +35,7 @@ public class PhasedArray {
     public static PhasedArray radial(int rings, int spokes, double minR, double maxR, double exp, boolean useExp, double spiral, double posNoise) {
         List<Vec3> pos = new ArrayList<>();
         double maxexp = Math.exp(exp) - 1;
+        spiral *= (rings-1)*0.5;
         for (int r = 0; r < rings; r++) {
             double radFrac = r / (rings - 1.0);
             double rad;

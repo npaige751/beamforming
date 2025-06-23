@@ -28,6 +28,14 @@ public class Utils {
         return degrees * Math.PI / 180.0;
     }
 
+    public static double degrees(double radians) {
+        return radians * 180.0 / Math.PI;
+    }
+
+    public static double db(double linearPower) {
+        return 10 * Math.log10(linearPower);
+    }
+
     public static double min(double[] x) {
         double m = Double.MAX_VALUE;
         for (int i=0; i < x.length; i++) {

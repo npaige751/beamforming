@@ -33,7 +33,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
         rmin = new Parameter("R Min", 0.05, 0.01, 10, true, false, width, PARAM_HT, (x) -> updateGrid());
         rmax = new Parameter("R Max", 0.3, 0.01, 10, true, false, width, PARAM_HT, (x) -> updateGrid());
         rexp = new Parameter("R Exp", 1.0, 0.1, 10, true, false, width, PARAM_HT, (x) -> updateGrid());
-        spiral = new Parameter("Spiral", 0, 0, 10, false, false, width, PARAM_HT, (x) -> updateGrid());
+        spiral = new Parameter("Spiral", 0, 0, 1, false, false, width, PARAM_HT, (x) -> updateGrid());
         posNoise = new Parameter("Position Noise", 0.001, 0.0001, 1, true, false, width, PARAM_HT, (x) -> updateGrid());
         micNoise = new Parameter("Mic Noise (dB)", -60, -60, 10, false, false, width, PARAM_HT, (x) -> updateGrid());
         rows = new Parameter("Rows", 4, 1, 16, false, true, width, PARAM_HT, (x) -> updateGrid());
@@ -53,7 +53,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
         add(spokes);
         add(rmin);
         add(rmax);
-//        add(rexp);
+        add(rexp);
         add(spiral);
         add(posNoise);
         add(micNoise);
@@ -91,7 +91,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
             remove(cols);
             add(rmin);
             add(rmax);
-//            add(rexp);
+            add(rexp);
             add(spiral);
             add(rings);
             add(spokes);
@@ -102,7 +102,7 @@ public class ArrayPanel extends JPanel implements ItemListener {
             add(cols);
             remove(rmin);
             remove(rmax);
-//            remove(rexp);
+            remove(rexp);
             remove(spiral);
             remove(rings);
             remove(spokes);
