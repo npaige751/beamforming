@@ -102,6 +102,7 @@ public class PhasedArray {
             for (int mi = 0; mi < mics.size(); mi++) {
                 sum[i] += mics.get(mi).sampleRecording(startTime + delays[mi] + i/Simulator.SPS);
             }
+            sum[i] /= mics.size();
         }
         return sum;
     }
