@@ -51,7 +51,7 @@ public class Evaluator {
     private static final double DEFAULT_MAXR = 0.3;
     private static final int DEFAULT_RINGS = 6;
     private static final int DEFAULT_SPOKES = 16;
-    private static final double DEFAULT_SPIRAL = 0;
+    private static final double DEFAULT_SPIRAL = 1;
     private static final double DEFAULT_EXP = 1;
 
     public Evaluator(IndependentVariable x, IndependentVariable c, DependentVariable y, boolean useExp) {
@@ -300,6 +300,7 @@ public class Evaluator {
                 for (int i = 0; i < xsteps; i++) {
                     double x = xmin + (xmax - xmin) * i / (xsteps - 1.0);
                     double y = evaluate(x, c);
+                    System.out.println(y);
                     int xp = (int) Utils.lerp(xmin, xmax, gleft, gright, x);
                     int yp = (int) Utils.lerp(ymin, ymax, gbot, gtop, y);
                     if (i != 0) {
@@ -320,7 +321,8 @@ public class Evaluator {
     private static String ticLabelString(double x) {
         String s = x + "";
         if (s.contains(".")) {
-            return s.substring(0, s.indexOf('.') + 2);
+            if (Math.abs(x - (int) x) < 1e-5) return "" + (int) x;
+            return s.substring(0, Math.min(s.indexOf('.') + 3, s.length()));
         }
         return s;
     }
