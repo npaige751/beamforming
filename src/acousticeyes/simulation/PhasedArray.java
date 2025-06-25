@@ -116,18 +116,40 @@ public class PhasedArray {
         return spectra;
     }
 
-    /*
-    public double[] delayAndSumFreqDomain(double[][] spectra, double[] delays, double startTime, int samples) {
+    // frequency domain DAS beamforming: delays are implemented as phase shifts for each frequency bin independently
+    public double[] delayAndSumFreqDomain(double[][] spectra, double[] delays, int samples) {
         double[] sum = new double[samples];
-        for (int i=0; i < samples; i+=2) {
-            for (int mi = 0; mi < mics.size(); mi++) {
-                sum[i] += mics.get(mi).sampleRecording(startTime + delays[mi] + i/Simulator.SPS);
+        double freqStep = Simulator.SPS / samples;
+        for (int mi = 0; mi < mics.size(); mi++) {
+            double phaseDelayBase = delays[mi] * 2 * Math.PI * freqStep;
+            double psr = Math.cos(phaseDelayBase);
+            double psi = Math.sin(phaseDelayBase);
+            double pr = psr;
+            double pi = psi;
+            for (int i=2; i < samples; i += 2) {
+                double freq = i/2 * freqStep;
+                if (freq > 10000) break;
+
+                double sr = spectra[mi][i];
+                double si = spectra[mi][i+1];
+                double rotr = sr * pr - si * pi;
+                double roti = sr * pi + si * pr;
+                sum[i] += rotr;
+                sum[i+1] += roti;
+
+                // increment phasor by phaseDelayBase using angle summation identities
+                // this avoids evaluating trig functions in the inner loop (2x faster)
+                double newpr = pr * psr - pi * psi;
+                pi = pi * psr + pr * psi;
+                pr = newpr;
             }
         }
-        return sum;
-
+        double[] mag = new double[samples/2];
+        for (int i=0; i < mag.length; i++) {
+            mag[i] = Math.sqrt(sum[2*i] * sum[2*i] + sum[2*i+1] * sum[2*i+1]);
+        }
+        return mag;
     }
-     */
 
     // Run DAS beamforming on a grid of points. Returns a 2D array with the RMS amplitude of the
     // delayed-and-summed waveforms at each beam direction.
@@ -143,7 +165,6 @@ public class PhasedArray {
         return res;
     }
 
-    /*
     public double[][] sweepBeamFreqDomain(double thetaStart, double thetaEnd, int thetaSteps, double phiStart, double phiEnd, int phiSteps, double startTime, int samples) {
         double[][] spectra = computeSpectra(startTime, samples);
         double[][] res = new double[thetaSteps][phiSteps];
@@ -151,11 +172,10 @@ public class PhasedArray {
             double theta = thetaStart + ((thetaEnd - thetaStart)*i)/(thetaSteps-1);
             for (int j=0; j < phiSteps; j++) {
                 double phi = phiStart + ((phiEnd - phiStart)*j)/(phiSteps-1);
-                res[i][j] = Utils.rms(delayAndSumFreqDomain(spectra, farFieldBeamformingDelays(theta, phi), startTime, samples));
+                res[i][j] = Utils.sum(delayAndSumFreqDomain(spectra, farFieldBeamformingDelays(theta, phi), samples));
             }
         }
         return res;
     }
-     */
 
 }

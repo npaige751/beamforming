@@ -47,8 +47,16 @@ public class Utils {
         return m;
     }
 
+    public static double sum(double[] x) {
+        double s = 0;
+        for (int i=0; i < x.length; i++) {
+            s += x[i];
+        }
+        return s;
+    }
+
     // compute discrete Fourier transform of x
-    // returns an array of twice the length of x, where adjacent entries are the real and imaginary components of the DFT
+    // returns an array where adjacent entries are the real and imaginary components of the DFT
     public static double[] dft(double[] x) {
         int n = x.length;
         double[] res = new double[n];

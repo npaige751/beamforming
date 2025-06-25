@@ -121,8 +121,10 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
     private void runSimulation(SimRequest req) {
         double fovt = Utils.radians(req.fovTheta);
         double fovp = Utils.radians(req.fovPhi);
+        long time = System.currentTimeMillis();
         double[][] hm = req.simulator.scan2d(req.phasedArray, req.xs, req.ys, -fovt/2, fovt/2, -fovp/2, fovp/2);
         BufferedImage img = req.simulator.render(hm, req.colorScale);
+        System.out.println("Beamforming took " + (System.currentTimeMillis() - time) + " ms");
         // todo: render actual / proposed source locations on top of this image
         // all Swing UI rendering must happen on the event dispatch thread
         SwingUtilities.invokeLater(() -> {
