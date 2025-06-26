@@ -23,8 +23,9 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
     private MainPanel mainPanel;
     private JPanel paramsPanel;
+    private JCheckBox useDamas;
 
-    private Parameter fovTheta, fovPhi, colorScale;
+    private Parameter fovTheta, fovPhi, resolution, colorScale;
     // possible others: color scaling; resolution; thresholds for source detection, etc.
 
     private Thread simulationThread;
@@ -32,7 +33,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
     // paramsPanel dimensions
     private static final int PP_WD = 500;
-    private static final int PP_HT = 150;
+    private static final int PP_HT = 200;
 
     private static final int PARAM_HT = 40;
 
@@ -48,16 +49,23 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
         fovTheta = new Parameter("FOV theta", 90, 20, 180, false, true, PP_WD, PARAM_HT, (x) -> scheduleRun());
         fovPhi = new Parameter("FOV phi", 90, 20, 180, false, true, PP_WD, PARAM_HT, (x) -> scheduleRun());
+        resolution = new Parameter("Resolution", 100, 5, 200, true, true, PP_WD, PARAM_HT, (x) -> scheduleRun());
         colorScale = new Parameter("Color scale", 4, 0, 10, false, false, PP_WD, PARAM_HT, (x) -> scheduleRun());
+        useDamas = new JCheckBox("Use DAMAS", false);
+        useDamas.addActionListener((x) -> scheduleRun());
 
         paramsPanel = new JPanel();
         paramsPanel.setLayout(null);
         paramsPanel.add(fovTheta);
         paramsPanel.add(fovPhi);
+        paramsPanel.add(resolution);
         paramsPanel.add(colorScale);
+        paramsPanel.add(useDamas);
         fovTheta.setBounds(0,0, PP_WD, PARAM_HT);
         fovPhi.setBounds(0,PARAM_HT, PP_WD, PARAM_HT);
         colorScale.setBounds(0, PARAM_HT*2, PP_WD, PARAM_HT);
+        resolution.setBounds(0, PARAM_HT * 3, PP_WD, PARAM_HT);
+        useDamas.setBounds(0, PARAM_HT * 4, PP_WD, PARAM_HT);
         paramsPanel.setBounds(0, height - PP_HT, PP_WD, PP_HT);
 
         add(paramsPanel);
@@ -114,25 +122,35 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
     }
 
     public void scheduleRun() {
-        SimRequest req = new SimRequest(simulator, phasedArray, xs, ys, fovTheta.get(), fovPhi.get(), colorScale.get());
+        SimRequest req = new SimRequest(simulator, phasedArray, (int) resolution.get(), (int) resolution.get(), fovTheta.get(), fovPhi.get(), colorScale.get());
         queue.add(req);
     }
 
     // potentially slow - don't call on the Swing event dispatch thread (this would freeze the UI while
     // the simulation is running)
     private void runSimulation(SimRequest req) {
+        boolean damasEnabled = useDamas.isSelected();
+        if (damasEnabled) {
+            req.xs = Math.min(req.xs, 25);
+            req.ys = req.xs;
+        }
         double fovt = Utils.radians(req.fovTheta);
         double fovp = Utils.radians(req.fovPhi);
         long time = System.currentTimeMillis();
         double[][] hm = req.simulator.scan2d(req.phasedArray, req.xs, req.ys, -fovt/2, fovt/2, -fovp/2, fovp/2);
-        damas = new DAMAS(req.phasedArray, 1000, xs, fovt);
-        long atime = System.currentTimeMillis();
-        damas.computeArrayResponseMatrix();
-        System.out.println(" DAMAS A matrix: " + (System.currentTimeMillis() - atime) + " ms");
-        atime = System.currentTimeMillis();
-        double[][] damasResult = damas.deconvolve(hm, 20);
-        System.out.println(" DAMAS deconvolution: " + (System.currentTimeMillis() - atime) + " ms");
-        BufferedImage img = req.simulator.render(damasResult, req.colorScale);
+        BufferedImage img;
+        if (damasEnabled) {
+            damas = new DAMAS(req.phasedArray, 6000, req.xs, fovt);
+            long atime = System.currentTimeMillis();
+            damas.computeArrayResponseMatrix();
+            System.out.println(" DAMAS A matrix: " + (System.currentTimeMillis() - atime) + " ms");
+            atime = System.currentTimeMillis();
+            double[][] damasResult = damas.deconvolve(hm, 50);
+            System.out.println(" DAMAS deconvolution: " + (System.currentTimeMillis() - atime) + " ms");
+            img = req.simulator.render(damasResult, req.colorScale);
+        } else {
+            img = req.simulator.render(hm, req.colorScale);
+        }
         System.out.println("Beamforming took " + (System.currentTimeMillis() - time) + " ms");
         // todo: render actual / proposed source locations on top of this image
         // all Swing UI rendering must happen on the event dispatch thread
