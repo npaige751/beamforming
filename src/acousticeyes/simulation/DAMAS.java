@@ -20,6 +20,16 @@ public class DAMAS {
         this.fov = fov;
     }
 
+    public void updateAndRecomputeArrayIfNeeded(PhasedArray arr, double freq, int n, double fov) {
+        if (this.arr.equals(arr) && this.freq == freq && this.n == n && this.fov == fov) return;
+        this.arr = arr;
+        this.freq = freq;
+        this.n = n;
+        this.fov = fov;
+        this.N = n*n;
+        computeArrayResponseMatrix();
+    }
+
     public void computeArrayResponseMatrix() {
         A = new double[N][N];
         for (int i = 0; i < n; i++) {

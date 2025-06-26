@@ -140,9 +140,13 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
         double[][] hm = req.simulator.scan2d(req.phasedArray, req.xs, req.ys, -fovt/2, fovt/2, -fovp/2, fovp/2);
         BufferedImage img;
         if (damasEnabled) {
-            damas = new DAMAS(req.phasedArray, 6000, req.xs, fovt);
+            if (damas == null) {
+                damas = new DAMAS(req.phasedArray, 6000, req.xs, fovt);
+                damas.computeArrayResponseMatrix();
+            } else {
+                damas.updateAndRecomputeArrayIfNeeded(req.phasedArray, 6000, req.xs, fovt);
+            }
             long atime = System.currentTimeMillis();
-            damas.computeArrayResponseMatrix();
             System.out.println(" DAMAS A matrix: " + (System.currentTimeMillis() - atime) + " ms");
             atime = System.currentTimeMillis();
             double[][] damasResult = damas.deconvolve(hm, 50);

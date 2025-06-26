@@ -61,4 +61,12 @@ public class Vec3 {
     public String toString() {
         return "(" + x + ", " + y + ", " + z + ")";
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Vec3 v) {
+            return x == v.x && y == v.y && z == v.z;
+        }
+        return false;
+    }
 }

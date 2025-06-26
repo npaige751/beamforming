@@ -180,4 +180,15 @@ public class PhasedArray {
         return res;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof PhasedArray)) return false;
+        PhasedArray p = (PhasedArray) other;
+        if (p.mics.size() != mics.size()) return false;
+        for (int i=0; i < mics.size(); i++) {
+            if (!mics.get(i).pos.equals(p.mics.get(i).pos)) return false;
+        }
+        return true;
+    }
+
 }
