@@ -3,6 +3,7 @@ package acousticeyes.simulation.ui;
 import acousticeyes.simulation.PhasedArray;
 import acousticeyes.simulation.Simulator;
 import acousticeyes.simulation.Speaker;
+import acousticeyes.simulation.DAMAS;
 import acousticeyes.util.Utils;
 
 import javax.swing.*;
@@ -16,6 +17,7 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
 
     private Simulator simulator;
     private PhasedArray phasedArray;
+    private DAMAS damas;
     private BufferedImage renderedImage;
     private int xs, ys;
 
@@ -123,7 +125,14 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
         double fovp = Utils.radians(req.fovPhi);
         long time = System.currentTimeMillis();
         double[][] hm = req.simulator.scan2d(req.phasedArray, req.xs, req.ys, -fovt/2, fovt/2, -fovp/2, fovp/2);
-        BufferedImage img = req.simulator.render(hm, req.colorScale);
+        damas = new DAMAS(req.phasedArray, 1000, xs, fovt);
+        long atime = System.currentTimeMillis();
+        damas.computeArrayResponseMatrix();
+        System.out.println(" DAMAS A matrix: " + (System.currentTimeMillis() - atime) + " ms");
+        atime = System.currentTimeMillis();
+        double[][] damasResult = damas.deconvolve(hm, 20);
+        System.out.println(" DAMAS deconvolution: " + (System.currentTimeMillis() - atime) + " ms");
+        BufferedImage img = req.simulator.render(damasResult, req.colorScale);
         System.out.println("Beamforming took " + (System.currentTimeMillis() - time) + " ms");
         // todo: render actual / proposed source locations on top of this image
         // all Swing UI rendering must happen on the event dispatch thread
