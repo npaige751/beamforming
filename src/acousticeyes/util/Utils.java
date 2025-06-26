@@ -55,6 +55,14 @@ public class Utils {
         return s;
     }
 
+    public static double[] product(double[] x, double[] y) {
+        double[] res = new double[x.length];
+        for (int i=0; i < res.length; i++) {
+            res[i] = x[i] * y[i];
+        }
+        return res;
+    }
+
     // compute discrete Fourier transform of x
     // returns an array where adjacent entries are the real and imaginary components of the DFT
     public static double[] dft(double[] x) {
@@ -71,6 +79,10 @@ public class Utils {
             res[k*2 + 1] = ssum / n;
         }
         return res;
+    }
+
+    public static double[] dft(double[] x, double[] window) {
+        return dft(product(x, window));
     }
 
 }

@@ -68,7 +68,7 @@ public class Simulator {
     // simulate, then do beamforming
     public double[][] scan2d(PhasedArray arr, int xs, int ys, double thetaStart, double thetaEnd, double phiStart, double phiEnd) {
         arr.simulate(this, 5000);
-        return arr.sweepBeam(thetaStart, thetaEnd, xs, phiStart, phiEnd, ys, 2000 / SPS, 100);
+        return arr.sweepBeamFreqDomain(thetaStart, thetaEnd, xs, phiStart, phiEnd, ys, 2000 / SPS, 100);
     }
 
     // render a heatmap

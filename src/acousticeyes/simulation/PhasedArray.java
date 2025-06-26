@@ -2,6 +2,7 @@ package acousticeyes.simulation;
 
 import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
+import acousticeyes.util.WindowFunctions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,7 +112,8 @@ public class PhasedArray {
         double[][] spectra = new double[n][samples];
         int startSample = (int) (startTime * Simulator.SPS);
         for (int i=0; i < n; i++) {
-            spectra[i] = Utils.dft(Arrays.copyOfRange(mics.get(i).recording, startSample, startSample + samples));
+            spectra[i] = Utils.dft(Arrays.copyOfRange(mics.get(i).recording, startSample, startSample + samples),
+                    WindowFunctions.blackmanHarrisWindow(samples));
         }
         return spectra;
     }
