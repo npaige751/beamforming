@@ -11,10 +11,15 @@ import java.util.List;
 /* Represents an array of microphones and implements delay-and-sum beamforming */
 public class PhasedArray {
     public List<Microphone> mics = new ArrayList<>();
+    public Subarrays subarrays;
     private Vec3 center;
     private int n;
 
     public PhasedArray(List<Vec3> locations, double posNoise) {
+        this(locations, posNoise, Subarrays.trivial(0, Simulator.SPS / 2, locations.size()));
+    }
+
+    public PhasedArray(List<Vec3> locations, double posNoise, Subarrays subarrays) {
         n = locations.size();
         center = new Vec3(0,0,0);
         for (int i=0; i < n; i++) {
@@ -22,6 +27,7 @@ public class PhasedArray {
             center = center.add(locations.get(i));
         }
         center = center.mul(1.0/n);
+        this.subarrays = subarrays;
     }
 
     public static PhasedArray grid(int n1, int n2, Vec3 c, Vec3 d1, Vec3 d2, double posNoise) {
@@ -130,14 +136,17 @@ public class PhasedArray {
             double pi = psi;
             for (int i=2; i < samples; i += 2) {
                 double freq = i/2 * freqStep;
-                if (freq > 10000) break;
+                if (freq > subarrays.maxFrequency()) break;
 
                 double sr = spectra[mi][i];
                 double si = spectra[mi][i+1];
                 double rotr = sr * pr - si * pi;
                 double roti = sr * pi + si * pr;
-                sum[i] += rotr;
-                sum[i+1] += roti;
+                double weight = subarrays.getWeight(mi, freq);
+                if (freq > 900) {
+                    sum[i] += weight * rotr;
+                    sum[i + 1] += weight * roti;
+                }
 
                 // increment phasor by phaseDelayBase using angle summation identities
                 // this avoids evaluating trig functions in the inner loop (2x faster)
@@ -148,7 +157,7 @@ public class PhasedArray {
         }
         double[] mag = new double[samples/2];
         for (int i=0; i < mag.length; i++) {
-            mag[i] = Math.sqrt(sum[2*i] * sum[2*i] + sum[2*i+1] * sum[2*i+1]);
+            mag[i] = Math.sqrt(sum[2*i] * sum[2*i] + sum[2*i+1] * sum[2*i+1]) / mics.size();
         }
         return mag;
     }
