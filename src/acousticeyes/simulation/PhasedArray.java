@@ -30,6 +30,10 @@ public class PhasedArray {
         this.subarrays = subarrays;
     }
 
+    public Vec3 getCenter() {
+        return center;
+    }
+
     public static PhasedArray grid(int n1, int n2, Vec3 c, Vec3 d1, Vec3 d2, double posNoise) {
         List<Vec3> pos = new ArrayList<>();
         for (int i=0; i < n1; i++) {
