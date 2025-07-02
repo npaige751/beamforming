@@ -43,7 +43,6 @@ public class Evaluator {
 
     private final IndependentVariable xVar, cVar; // variables to represent by x-axis position and separate colored lines, respectively
     private final DependentVariable yVar;
-    private final boolean useExp; // linear vs. exponential spacing for array
 
     // default array/simulation parameters for non-varying variables
     private static final double DEFAULT_FREQ = 3000;
@@ -54,11 +53,10 @@ public class Evaluator {
     private static final double DEFAULT_SPIRAL = 1;
     private static final double DEFAULT_EXP = 1;
 
-    public Evaluator(IndependentVariable x, IndependentVariable c, DependentVariable y, boolean useExp) {
+    public Evaluator(IndependentVariable x, IndependentVariable c, DependentVariable y) {
         this.xVar = x;
         this.cVar = c;
         this.yVar = y;
-        this.useExp = useExp;
     }
 
     private Simulator getSimulator(double x, double c) {
@@ -91,7 +89,7 @@ public class Evaluator {
             case SPIRAL -> spiral = c;
             case EXP -> exp = c;
         }
-        return PhasedArray.radial(rings, spokes, minr, maxr, exp, useExp, spiral, 0);
+        return PhasedArray.radial(rings, spokes, minr, maxr, exp, spiral, 0);
     }
 
     private double evaluate(double x, double c) {
@@ -328,7 +326,7 @@ public class Evaluator {
     }
 
     public static void main(String[] args) throws IOException {
-        Evaluator e = new Evaluator(IndependentVariable.FREQ, IndependentVariable.SPIRAL, DependentVariable.AVG30_SL, false);
+        Evaluator e = new Evaluator(IndependentVariable.FREQ, IndependentVariable.SPIRAL, DependentVariable.AVG30_SL);
         ImageIO.write(e.new GraphOptions(1000, 10000, 0, 1, -20, 0, 10, 8, 1000, 800).graph(),
                 "png",
                 new File("test.png"));

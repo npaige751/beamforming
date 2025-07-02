@@ -51,23 +51,23 @@ public class PhasedArray {
      *   spiral - ranges from 0 (straight spokes) to 1 (maximum spiralization). Larger values would create mirror versions of less spiraly arrangements.
      *   posNoise - standard deviation for gaussian noise modeling error in actual vs. theoretical microphone positions (same stddev on all axes, for simplicity)
      */
-    public static PhasedArray radial(int rings, int spokes, double minR, double maxR, double exp, boolean useExp, double spiral, double posNoise) {
+    public static PhasedArray radial(int rings, int spokes, double minR, double maxR, double exp, double spiral, double posNoise) {
         List<Vec3> pos = new ArrayList<>();
-        double maxexp = Math.exp(exp) - 1;
         spiral *= (rings-1)*0.5;
+        double sum = 0;
+        for (int r = 0; r < rings - 1; r++) {
+            sum += Math.pow(exp, r);
+        }
+        double c = (maxR - minR) / sum;
+
+        double rad = minR;
         for (int r = 0; r < rings; r++) {
-            double radFrac = r / (rings - 1.0);
-            double rad;
-            if (useExp) {
-                radFrac = Math.exp(radFrac * exp) - 1;
-                rad = minR + (maxR - minR) * (radFrac / maxexp);
-            } else {
-                rad = minR + (maxR - minR) * radFrac;
-            }
+            double radFrac = (rad - minR) / (maxR - minR);
             for (int s = 0; s < spokes; s++) {
                 double theta = 2 * Math.PI * (s + spiral*radFrac) / spokes;
                 pos.add(new Vec3(rad * Math.cos(theta), rad * Math.sin(theta), 0.0));
             }
+            rad += Math.pow(exp, r) * c;
         }
         return new PhasedArray(pos, posNoise);
     }

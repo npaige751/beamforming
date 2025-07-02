@@ -134,7 +134,6 @@ public class ArrayPanel extends JPanel implements ItemListener {
                         rmin.get(),
                         rmax.get(),
                         rexp.get(),
-                        false,
                         spiral.get(),
                         posNoise.get()
                 );
