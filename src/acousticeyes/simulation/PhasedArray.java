@@ -62,9 +62,9 @@ public class PhasedArray {
 
         double rad = minR;
         for (int r = 0; r < rings; r++) {
-            double radFrac = (rad - minR) / (maxR - minR);
+            double ringFrac = r / (rings - 1.0);
             for (int s = 0; s < spokes; s++) {
-                double theta = 2 * Math.PI * (s + spiral*radFrac) / spokes;
+                double theta = 2 * Math.PI * (s + spiral*ringFrac) / spokes;
                 pos.add(new Vec3(rad * Math.cos(theta), rad * Math.sin(theta), 0.0));
             }
             rad += Math.pow(exp, r) * c;

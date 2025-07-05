@@ -48,9 +48,9 @@ public class Evaluator {
     private static final double DEFAULT_FREQ = 3000;
     private static final double DEFAULT_MINR = 0.05;
     private static final double DEFAULT_MAXR = 0.3;
-    private static final int DEFAULT_RINGS = 6;
-    private static final int DEFAULT_SPOKES = 16;
-    private static final double DEFAULT_SPIRAL = 1;
+    private static final int DEFAULT_RINGS = 8;
+    private static final int DEFAULT_SPOKES = 12;
+    private static final double DEFAULT_SPIRAL = 0;
     private static final double DEFAULT_EXP = 1;
 
     public Evaluator(IndependentVariable x, IndependentVariable c, DependentVariable y) {
@@ -89,7 +89,13 @@ public class Evaluator {
             case SPIRAL -> spiral = c;
             case EXP -> exp = c;
         }
-        return PhasedArray.radial(rings, spokes, minr, maxr, exp, spiral, 0);
+        PhasedArray arr = PhasedArray.radial(rings, spokes, minr, maxr, exp, spiral, 0);
+        arr.subarrays = Subarrays.forRadial(0, rings, spokes, new Subarrays.Band[]{
+                new Subarrays.Band(4100, 2, rings-1),
+                new Subarrays.Band(24000, 0, rings - 3)
+        });
+        arr.subarrays = Subarrays.trivial(0, 24000, rings*spokes);
+        return arr;
     }
 
     private double evaluate(double x, double c) {
@@ -99,7 +105,7 @@ public class Evaluator {
         if (yVar == DependentVariable.BEAMWIDTH) {
             return getBeamwidth(arr);
         } else {
-            SidelobeInfo sidelobe = evaluateSidelobes(arr, 100);
+            SidelobeInfo sidelobe = evaluateSidelobes(arr, 150);
             return switch (yVar) {
                 case MAX_SL -> sidelobe.max;
                 case AVG_SL -> sidelobe.avg;
@@ -134,23 +140,24 @@ public class Evaluator {
         // find first minimum along theta; this defines where sidelobes can begin. Assumes approximate radial symmetry
         int th = 1;
         while (th < steps) {
-            if (heatmap[th][0] > heatmap[th-1][0]) break;
+            if (heatmap[th-1][0] < 0.5*centerResponse && heatmap[th][0] > heatmap[th-1][0]) break;
             th++;
         }
         SidelobeInfo info = new SidelobeInfo();
         info.size = th * 90.0 / steps;
-        int count = 0;
+        double count = 0;
         int count30 = 0;
         int count60 = 0;
         for (int i=0; i < steps; i++) {
             for (int j=0; j < steps; j++) {
+                double cosphi = Math.cos(j * Math.PI / 2 / steps);
                 double r = Math.sqrt(i*i + j*j);
                 if (r > th) {
                     if (heatmap[i][j] > info.max) {
                         info.max = heatmap[i][j];
                         info.rmax = r;
                     }
-                    info.avg += heatmap[i][j];
+                    info.avg += heatmap[i][j] * cosphi; // weight according to solid angle represented by pixel
                     if (r*90.0/steps < 30) {
                         info.avg30 += heatmap[i][j];
                         count30++;
@@ -159,7 +166,7 @@ public class Evaluator {
                         info.avg60 += heatmap[i][j];
                         count60++;
                     }
-                    count++;
+                    count += cosphi;
                 }
             }
         }
@@ -326,9 +333,18 @@ public class Evaluator {
     }
 
     public static void main(String[] args) throws IOException {
-        Evaluator e = new Evaluator(IndependentVariable.FREQ, IndependentVariable.SPIRAL, DependentVariable.AVG30_SL);
-        ImageIO.write(e.new GraphOptions(1000, 10000, 0, 1, -20, 0, 10, 8, 1000, 800).graph(),
+        Evaluator e = new Evaluator(IndependentVariable.SPOKES, IndependentVariable.FREQ, DependentVariable.MAX_SL);
+        ImageIO.write(e.new GraphOptions(6, 24, 1000, 10000, -20, 0, 19, 19, 1000, 800).graph(),
                 "png",
-                new File("test.png"));
+                new File("spokes2_nospiral.png"));
+
+        /*
+        Evaluator e = new Evaluator(IndependentVariable.FREQ, IndependentVariable.EXP, DependentVariable.MAX_SL);
+        ImageIO.write(e.new GraphOptions(1000, 10000, 1.0, 1.4, -20, 0, 10, 11, 1000, 800).graph(),
+                "png",
+                new File("asdf.png"));
+
+         */
+
     }
 }
