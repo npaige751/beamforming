@@ -1,5 +1,6 @@
-package acousticeyes.simulation;
+package acousticeyes.beamforming;
 
+import acousticeyes.simulation.Simulator;
 import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
 

@@ -1,4 +1,4 @@
-package acousticeyes.simulation;
+package acousticeyes.beamforming;
 
 import java.util.Arrays;
 

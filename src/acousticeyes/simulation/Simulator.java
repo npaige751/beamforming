@@ -1,5 +1,8 @@
 package acousticeyes.simulation;
 
+import acousticeyes.beamforming.Microphone;
+import acousticeyes.beamforming.PhasedArray;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;

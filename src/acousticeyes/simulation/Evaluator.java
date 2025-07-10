@@ -1,5 +1,7 @@
 package acousticeyes.simulation;
 
+import acousticeyes.beamforming.PhasedArray;
+import acousticeyes.beamforming.Subarrays;
 import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
 

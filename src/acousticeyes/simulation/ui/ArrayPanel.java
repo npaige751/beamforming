@@ -1,7 +1,7 @@
 package acousticeyes.simulation.ui;
 
-import acousticeyes.simulation.PhasedArray;
-import acousticeyes.simulation.Microphone;
+import acousticeyes.beamforming.PhasedArray;
+import acousticeyes.beamforming.Microphone;
 import acousticeyes.util.Vec3;
 
 import javax.swing.*;

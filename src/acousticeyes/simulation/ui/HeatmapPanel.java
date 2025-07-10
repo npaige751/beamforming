@@ -1,9 +1,9 @@
 package acousticeyes.simulation.ui;
 
-import acousticeyes.simulation.PhasedArray;
+import acousticeyes.beamforming.PhasedArray;
 import acousticeyes.simulation.Simulator;
 import acousticeyes.simulation.Speaker;
-import acousticeyes.simulation.DAMAS;
+import acousticeyes.beamforming.DAMAS;
 import acousticeyes.util.Utils;
 
 import javax.swing.*;

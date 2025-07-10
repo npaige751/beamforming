@@ -1,6 +1,6 @@
 package acousticeyes.simulation.ui;
 
-import acousticeyes.simulation.PhasedArray;
+import acousticeyes.beamforming.PhasedArray;
 
 public interface ArrayListener {
     void phasedArrayUpdated(PhasedArray array);
