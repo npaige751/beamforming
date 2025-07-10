@@ -4,6 +4,9 @@ import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
 import acousticeyes.util.WindowFunctions;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -202,6 +205,19 @@ public class PhasedArray {
             if (!mics.get(i).pos.equals(p.mics.get(i).pos)) return false;
         }
         return true;
+    }
+
+    public void dumpPositions(File f) {
+        try (PrintWriter pw = new PrintWriter(f)) {
+            for (Microphone m : mics) {
+                pw.println(m.pos.x + " " + m.pos.y + " " + m.pos.z);
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
+    public static void main (String[] args) {
+        radial(8, 12, 0.05, 0.3, 1.25, 1, 0.0).dumpPositions(new File("microphones.txt"));
     }
 
 }
