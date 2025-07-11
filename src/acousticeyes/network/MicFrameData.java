@@ -8,6 +8,7 @@ public class MicFrameData {
     public double[][] samples;
     public int startSeq; // sequence number of first packet
     private long[] filledPackets; // bitmap indicating which packets have arrived
+    public int np = 0;
 
     // mask for last partial entry in filledPackets
     private static final long MASK = MicrophoneDataDispatcher.PACKETS_PER_FRAME % 64 == 0 ? -1 :
@@ -28,7 +29,9 @@ public class MicFrameData {
         if (!isInRange(mdp)) return;
         if (isFilled(mdp.sequenceNumber)) {
             System.err.println("Already filled sequence number " + mdp.sequenceNumber);
+            return;
         }
+        np++;
         int start = (mdp.sequenceNumber - startSeq) * UdpServer.SAMPLES_PER_MIC;
         for (int m = 0; m < samples.length; m++) {
             for (int s = 0; s < UdpServer.SAMPLES_PER_MIC; s++) {
@@ -40,10 +43,7 @@ public class MicFrameData {
 
     // determines whether all packets for this frame have arrived
     public boolean isComplete() {
-        for (int i = 0; i < filledPackets.length - 1; i++) {
-            if (filledPackets[i] != -1) return false;
-        }
-        return filledPackets[filledPackets.length - 1] == MASK;
+        return np == MicrophoneDataDispatcher.PACKETS_PER_FRAME;
     }
 
     private boolean isFilled(int seq) {

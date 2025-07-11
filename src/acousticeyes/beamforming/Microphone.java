@@ -4,6 +4,8 @@ import acousticeyes.simulation.Simulator;
 import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
 
+import java.util.Arrays;
+
 public class Microphone {
     public Vec3 pos; // theoretical position - beamforming assumes the mic is here
     public Vec3 noisyPos; // actual position - used for simulating microphone input
@@ -42,5 +44,18 @@ public class Microphone {
         for (int i=0; i < recording.length; i++) {
             recording[i] += Math.random() * ampl;
         }
+    }
+
+    public double[] computeSpectrum(int windowLength, int overlap, double[] window) {
+        double[] spectrum = new double[windowLength];
+        int sstart = 0;
+        while (sstart + windowLength < recording.length) {
+            double[] dft = Utils.dft(Arrays.copyOfRange(recording, sstart, sstart + windowLength), window);
+            for (int i=0; i < dft.length; i++) {
+                spectrum[i] += dft[i];
+            }
+            sstart += windowLength - overlap;
+        }
+        return spectrum;
     }
 }

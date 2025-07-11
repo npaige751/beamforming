@@ -4,6 +4,7 @@ import acousticeyes.beamforming.PhasedArray;
 import acousticeyes.simulation.Simulator;
 import acousticeyes.simulation.Speaker;
 import acousticeyes.beamforming.DAMAS;
+import acousticeyes.util.ColorMap;
 import acousticeyes.util.Utils;
 
 import javax.swing.*;
@@ -151,9 +152,9 @@ public class HeatmapPanel extends JPanel implements ArrayListener, SpeakerListen
             atime = System.currentTimeMillis();
             double[][] damasResult = damas.deconvolve(hm, 100);
             System.out.println(" DAMAS deconvolution: " + (System.currentTimeMillis() - atime) + " ms");
-            img = req.simulator.render(damasResult, req.colorScale);
+            img = ColorMap.DEFAULT.render(damasResult, req.colorScale);
         } else {
-            img = req.simulator.render(hm, req.colorScale);
+            img = ColorMap.DEFAULT.render(hm, req.colorScale);
         }
         System.out.println("Beamforming took " + (System.currentTimeMillis() - time) + " ms");
         // todo: render actual / proposed source locations on top of this image

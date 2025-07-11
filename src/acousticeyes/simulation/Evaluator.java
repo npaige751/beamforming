@@ -138,7 +138,8 @@ public class Evaluator {
 
     private static SidelobeInfo evaluateSidelobes(PhasedArray arr, int steps) {
         double centerResponse = Utils.rms(arr.delayAndSum(arr.farFieldBeamformingDelays(0, 0), 2000 / Simulator.SPS, 100));
-        double[][] heatmap = arr.sweepBeamFreqDomain(0, Utils.radians(90), steps, 0, Utils.radians(90), steps, 2000/Simulator.SPS, 100);
+        double[][] spectra = arr.computeSpectra(2000 / Simulator.SPS, 100);
+        double[][] heatmap = arr.sweepBeamFreqDomain(spectra, 0, Utils.radians(90), steps, 0, Utils.radians(90), steps);
         // find first minimum along theta; this defines where sidelobes can begin. Assumes approximate radial symmetry
         int th = 1;
         while (th < steps) {

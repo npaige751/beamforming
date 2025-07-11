@@ -133,7 +133,8 @@ public class PhasedArray {
     }
 
     // frequency domain DAS beamforming: delays are implemented as phase shifts for each frequency bin independently
-    public double[] delayAndSumFreqDomain(double[][] spectra, double[] delays, int samples) {
+    public double[] delayAndSumFreqDomain(double[][] spectra, double[] delays) {
+        int samples = spectra[0].length;
         double[] sum = new double[samples];
         double freqStep = Simulator.SPS / samples;
         for (int mi = 0; mi < mics.size(); mi++) {
@@ -184,14 +185,13 @@ public class PhasedArray {
         return res;
     }
 
-    public double[][] sweepBeamFreqDomain(double thetaStart, double thetaEnd, int thetaSteps, double phiStart, double phiEnd, int phiSteps, double startTime, int samples) {
-        double[][] spectra = computeSpectra(startTime, samples);
+    public double[][] sweepBeamFreqDomain(double[][] spectra, double thetaStart, double thetaEnd, int thetaSteps, double phiStart, double phiEnd, int phiSteps) {
         double[][] res = new double[thetaSteps][phiSteps];
         for (int i=0; i < thetaSteps; i++) {
             double theta = thetaStart + ((thetaEnd - thetaStart)*i)/(thetaSteps-1);
             for (int j=0; j < phiSteps; j++) {
                 double phi = phiStart + ((phiEnd - phiStart)*j)/(phiSteps-1);
-                res[i][j] = Utils.sum(delayAndSumFreqDomain(spectra, farFieldBeamformingDelays(theta, phi), samples));
+                res[i][j] = Utils.sum(delayAndSumFreqDomain(spectra, farFieldBeamformingDelays(theta, phi)));
             }
         }
         return res;
