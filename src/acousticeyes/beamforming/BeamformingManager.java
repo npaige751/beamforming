@@ -77,9 +77,10 @@ public class BeamformingManager {
             for (int t = 0; t < NTHREADS; t++) {
                 final int threadNum = t;
                 double phiStep = FOV / NTHREADS;
+                double phiPixelStep = FOV / STEPS;
                 beamformingTasks.add(new FutureTask<>(() -> {
                     double phiStart = threadNum * phiStep - (FOV / 2);
-                    double[][] heatmapSlice = array.sweepBeamFreqDomain(spectra, -FOV / 2, FOV / 2, STEPS, phiStart, phiStart + phiStep, STEPS / NTHREADS);
+                    double[][] heatmapSlice = array.sweepBeamFreqDomain(spectra, -FOV / 2, FOV / 2, STEPS, phiStart, phiStart + phiStep - phiPixelStep, STEPS / NTHREADS);
                     for (int x = 0; x < STEPS; x++) {
                         for (int y = 0; y < STEPS / NTHREADS; y++) {
                             // no synchronization needed here since different threads access disjoint regions of heatmap
