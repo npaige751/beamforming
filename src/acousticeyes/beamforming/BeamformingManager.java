@@ -19,7 +19,7 @@ import java.util.concurrent.*;
 public class BeamformingManager {
 
     private static final int NTHREADS = 8;
-    private static final int WINDOW_SIZE = 150; // DFT window size for computing spectra
+    private static final int WINDOW_SIZE = 256; // DFT window size for computing spectra
     private static final int OVERLAP = 0; // how much to overlap adjacent DFT windows
     private static final double[] WINDOW = WindowFunctions.blackmanHarrisWindow(WINDOW_SIZE); // cached window function values
 
@@ -54,14 +54,14 @@ public class BeamformingManager {
             for (int m = 0; m < array.mics.size(); m++) {
                 array.mics.get(m).recording = frame.samples[m];
             }
-            // compute spectra - multithread or no? could split by mic
+            // compute spectra
             double[][] spectra = new double[array.mics.size()][];
             List<FutureTask<Void>> dftTasks = new ArrayList<>();
             for (int t = 0; t < NTHREADS; t++) {
                 final int threadNum = t;
                 dftTasks.add(new FutureTask<>(() -> {
                     for (int m = threadNum; m < array.mics.size(); m += NTHREADS) {
-                        spectra[m] = array.mics.get(m).computeSpectrum(WINDOW_SIZE, OVERLAP, WINDOW);
+                        spectra[m] = array.mics.get(m).computeSpectrum(OVERLAP, WINDOW);
                     }
                 }, null));
                 executor.execute(dftTasks.get(t));

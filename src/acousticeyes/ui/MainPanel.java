@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 public class MainPanel extends JPanel {
 
     private BufferedImage image;
-    private double scale = 3.0;
+    private double scale = 0.3;
 
     public MainPanel() {
     }

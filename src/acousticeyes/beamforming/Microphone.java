@@ -1,6 +1,7 @@
 package acousticeyes.beamforming;
 
 import acousticeyes.simulation.Simulator;
+import acousticeyes.util.Complex;
 import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
 
@@ -46,15 +47,16 @@ public class Microphone {
         }
     }
 
-    public double[] computeSpectrum(int windowLength, int overlap, double[] window) {
-        double[] spectrum = new double[windowLength];
+    public double[] computeSpectrum(int overlap, double[] window) {
+        double[] spectrum = new double[window.length];
         int sstart = 0;
-        while (sstart + windowLength < recording.length) {
-            double[] dft = Utils.dft(Arrays.copyOfRange(recording, sstart, sstart + windowLength), window);
-            for (int i=0; i < dft.length; i++) {
-                spectrum[i] += dft[i];
+        while (sstart + window.length < recording.length) {
+            Complex[] dft = Utils.fft(recording, sstart, window);
+            for (int i=0; i < dft.length/2; i++) {
+                spectrum[2*i] += dft[i].a;
+                spectrum[2*i+1] += dft[i].b;
             }
-            sstart += windowLength - overlap;
+            sstart += window.length - overlap;
         }
         return spectrum;
     }
