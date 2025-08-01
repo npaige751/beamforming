@@ -5,11 +5,17 @@ import acousticeyes.util.Utils;
 import acousticeyes.util.Vec3;
 import acousticeyes.util.WindowFunctions;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /* Represents an array of microphones and implements delay-and-sum beamforming */
@@ -132,6 +138,16 @@ public class PhasedArray {
         return spectra;
     }
 
+    // somewhat faster than Math.sin if the cos(theta) has already been computed.
+    // probably loses a few bits of precision, which should be ok.
+    private static double getSin(double theta, double cos) {
+        double s = Math.sqrt(1.0 - cos * cos);
+        if (theta % (2 * Math.PI) > Math.PI) {
+            return -s;
+        }
+        return s;
+    }
+
     // frequency domain DAS beamforming: delays are implemented as phase shifts for each frequency bin independently
     public double[] delayAndSumFreqDomain(double[][] spectra, double[] delays) {
         int samples = spectra[0].length;
@@ -140,7 +156,7 @@ public class PhasedArray {
         for (int mi = 0; mi < mics.size(); mi++) {
             double phaseDelayBase = delays[mi] * 2 * Math.PI * freqStep;
             double psr = Math.cos(phaseDelayBase);
-            double psi = Math.sin(phaseDelayBase);
+            double psi = getSin(phaseDelayBase, psr); //Math.sin(phaseDelayBase);
             double pr = psr;
             double pi = psi;
             for (int i=2; i < samples; i += 2) {
@@ -208,17 +224,111 @@ public class PhasedArray {
         return true;
     }
 
-    public void dumpPositions(File f) {
+    // compute mic positions in local circuit-board space for one quadrant.
+    // assumes 4-fold radial symmetry
+    // board is the lower right board
+    // boardOrigin is the coordinates of the board's origin in global space
+    public void dumpQuadrantPositions(File f, double theta, Vec3 boardOrigin) {
+        double boardW = 0.258;
+        double boardH = 0.325;
+        double boardXmax = boardW + 0.0295;
+        double boardYmax = boardH - 0.0375;
         try (PrintWriter pw = new PrintWriter(f)) {
+            List<Vec3> positions = new ArrayList<>();
             for (Microphone m : mics) {
-                pw.println(m.pos.x + " " + m.pos.y + " " + m.pos.z);
+                Vec3 pos = m.pos.rotZ(theta);
+//                System.out.println(pos);
+                if (Math.abs(pos.x) < 0.0405 && Math.abs(pos.y) < 0.0405) {
+                    System.out.println("ERR - mic at " + pos + " is inside center board region");
+                    continue;
+                }
+                if (pos.x < 0.0375) continue;
+                if (pos.y < -0.0405) continue;
+                if (pos.x < 0.0405) {
+                    System.out.println("ERR - mic at " + pos + " is in gap");
+                    continue;
+                }
+                if (pos.y < -0.0375) {
+                    System.out.println("ERR - mic at " + pos + " is in gap");
+                    continue;
+                }
+                if (pos.x > boardXmax) {
+                    System.out.println("ERR - mic at " + pos + " is off edge");
+                    continue;
+                }
+                if (pos.y > boardYmax) {
+                    System.out.println("ERR - mic at " + pos + " is off edge");
+                    continue;
+                }
+                if (pos.x < 0.0415) {
+                    System.out.println("WARN - mic at " + pos + " is close to edge");
+                }
+                if (pos.y < -0.0365) {
+                    System.out.println("WARN - mic at " + pos + " is close to edge");
+                }
+                if (pos.x > boardXmax - 0.001) {
+                    System.out.println("WARN - mic at " + pos + " is close to edge");
+                }
+                if (pos.y > boardYmax - 0.001) {
+                    System.out.println("WARN - mic at " + pos + " is close to edge");
+                }
+                positions.add(pos.sub(boardOrigin));
+            }
+            for (Vec3 p : positions) {
+                pw.printf("%.1f %.1f\n", p.x * 1000, p.y * 1000);
             }
         } catch (IOException ignored) {
         }
     }
 
+    public void renderPanelLayout(double theta) {
+        double panel_wd = 258;
+        double panel_ht = 325;
+        double panel_x = 29.5;
+        double panel_y = -37.5;
+        double tab_len = 11;
+        double tab_wd = 12.5;
+        double cboard_size = 75;
+
+        int ws = 800;
+        int is = 2000;
+        BufferedImage img = new BufferedImage(is, is, 1);
+        Graphics2D g = img.createGraphics();
+        AffineTransform transform = AffineTransform.getScaleInstance(is / (double) ws , is / (double) ws);
+        transform.concatenate(AffineTransform.getTranslateInstance(ws/2, ws/2));
+        g.setTransform(transform);
+        g.setStroke(new BasicStroke(0.5f));
+        g.setColor(Color.BLUE);
+        g.draw(new Rectangle2D.Double(-cboard_size/2, -cboard_size/2, cboard_size, cboard_size));
+        g.setColor(Color.WHITE);
+        for (int i=0; i < 4; i++) {
+            g.draw(new Rectangle2D.Double(panel_x, panel_y, tab_len, tab_wd));
+            g.draw(new Rectangle2D.Double(panel_x + tab_len, panel_y, panel_wd - tab_len, panel_ht));
+            transform.concatenate(AffineTransform.getRotateInstance(Math.PI / 2));
+            g.setTransform(transform);
+        }
+        g.setColor(Color.CYAN);
+        double micSize = 4;
+        for (Microphone m : mics) {
+            Vec3 p = m.pos.rotZ(theta);
+//            System.out.println(p);
+            g.draw(new Rectangle2D.Double(p.x * 1000 - micSize/2, p.y * 1000 - micSize/2, micSize, micSize));
+        }
+
+        try {
+            ImageIO.write(img, "png", new File("test.png"));
+        } catch (IOException ignored) {}
+    }
+
     public static void main (String[] args) {
-        radial(8, 12, 0.05, 0.3, 1.25, 1, 0.0).dumpPositions(new File("microphones.txt"));
+        PhasedArray arr = radial(8, 12, 0.05, 0.295, 1.25, 1, 0.0);
+        double theta = Utils.radians(0);
+        arr.dumpQuadrantPositions(new File("microphones.txt"), theta,
+                        new Vec3(0.0295, -0.0375, 0)
+//                        new Vec3(0.0, 0.0, 0)
+                );
+        System.out.println("\n--------------------------\n");
+        arr.renderPanelLayout(theta);
     }
 
 }
